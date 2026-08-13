@@ -1,39 +1,22 @@
-import {
-    Marker,
-    Popup
-} from "react-leaflet";
+import { Marker, Popup } from "react-leaflet";
 
 import L from "leaflet";
 
-
-
-function createIcon(
-    type,
-    size,
-    faded
-) {
-
+function createIcon(type, size, faded) {
     const colors = {
+        normal: "#ffffff",
 
-        normal:"#ffffff",
+        origin: "#00ffff",
 
-        origin:"#00ffff",
-
-        destination:"#ff4d6d"
-
+        destination: "#ff4d6d",
     };
 
-
-    const color =
-        colors[type];
-
+    const color = colors[type];
 
     return L.divIcon({
+        className: "airport-node",
 
-        className:"airport-node",
-
-        html:
-        `
+        html: `
         <div
             style="
                 width:${size}px;
@@ -54,26 +37,13 @@ function createIcon(
         </div>
         `,
 
-        iconSize:[
-            size,
-            size
-        ],
+        iconSize: [size, size],
 
-        iconAnchor:[
-            size / 2,
-            size / 2
-        ]
-
+        iconAnchor: [size / 2, size / 2],
     });
-
 }
 
-
-
-
-
 export default function AirportNode({
-
     airport,
 
     origin,
@@ -84,181 +54,74 @@ export default function AirportNode({
 
     onSelect,
 
-    onExpand
-
+    onExpand,
 }) {
-
-
-
-    if (
-
-        airport.latitude == null ||
-
-        airport.longitude == null
-
-    ) {
-
+    if (airport.latitude == null || airport.longitude == null) {
         return null;
-
     }
 
+    const connections = airport.connections ?? 0;
 
+    const size = Math.min(34, 8 + connections / 35);
 
-
-
-    const connections =
-        airport.connections ?? 0;
-
-
-
-    const size =
-        Math.min(
-            34,
-            8 + connections / 35
-        );
-
-
-
-
-
-    const type =
-
-        origin
-
-        ?
-
-        "origin"
-
-        :
-
-        destination
-
-        ?
-
-        "destination"
-
-        :
-
-        "normal";
-
-
-
-
+    const type = origin ? "origin" : destination ? "destination" : "normal";
 
     return (
-
         <Marker
+            position={[airport.latitude, airport.longitude]}
 
-            position={[
-                airport.latitude,
-                airport.longitude
-            ]}
-
-            icon={
-                createIcon(
-                    type,
-                    size,
-                    faded
-                )
-            }
+            icon={createIcon(type, size, faded)}
 
             eventHandlers={{
-
                 click: () => {
-
                     if (onExpand) {
-
-                        onExpand(
-                            airport.iata
-                        );
-
+                        onExpand(airport.iata);
                     }
-
                 },
 
                 dblclick: () => {
-
-                    onSelect(
-                        airport.iata
-                    );
-
-                }
-
+                    onSelect(airport.iata);
+                },
             }}
-
         >
-
             <Popup>
-
-                <strong>
-                    {airport.iata}
-                </strong>
+                <strong>{airport.iata}</strong>
 
                 <br />
 
                 {airport.name}
 
-                {
-                    airport.city &&
-
+                {airport.city && (
                     <>
-
                         <br />
 
                         {airport.city}
-
                     </>
+                )}
 
-                }
-
-                {
-                    connections > 0 &&
-
+                {connections > 0 && (
                     <>
-
                         <br />
                         <br />
-
-                        Connections:
-                        {" "}
-                        {connections}
-
+                        Connections: {connections}
                     </>
+                )}
 
-                }
-
-                {
-                    origin &&
-
+                {origin && (
                     <>
-
                         <br />
-                        <br />
-
-                        ✈ Starting point
-
+                        <br />✈ Starting point
                     </>
+                )}
 
-                }
-
-                {
-                    destination &&
-
+                {destination && (
                     <>
-
                         <br />
                         <br />
-
                         🛬 Destination
-
                     </>
-
-                }
-
+                )}
             </Popup>
-
         </Marker>
-
     );
-
 }

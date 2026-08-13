@@ -3,122 +3,91 @@ package com.backend.backend.service;
 import com.backend.backend.model.Airport;
 import com.backend.backend.repository.AirportRepository;
 import jakarta.annotation.PostConstruct;
+import java.io.FileReader;
+import java.io.Reader;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
 
-import java.io.FileReader;
-import java.io.Reader;
-
 @Service
 public class AirportImportService {
 
-    private final AirportRepository repository;
+  private final AirportRepository repository;
 
-    public AirportImportService(AirportRepository repository) {
-        this.repository = repository;
+  public AirportImportService(AirportRepository repository) {
+    this.repository = repository;
+  }
+
+  @PostConstruct
+  public void importAirports() {
+
+    if (repository.count() > 0) {
+      System.out.println("Airports already loaded");
+      return;
     }
 
-    @PostConstruct
-    public void importAirports() {
+    try (Reader reader = new FileReader("../data/raw/airports.dat");
+        CSVParser parser = CSVFormat.DEFAULT.parse(reader)) {
 
-        if (repository.count() > 0) {
-            System.out.println("Airports already loaded");
-            return;
+      for (CSVRecord record : parser) {
+
+        if (record.size() < 8) {
+          continue;
         }
 
-        try (
-            Reader reader = new FileReader("../data/raw/airports.dat");
-            CSVParser parser = CSVFormat.DEFAULT
-                    .parse(reader)
-        ) {
+        Airport airport = new Airport();
 
-            for (CSVRecord record : parser) {
+        airport.setId(Long.parseLong(record.get(0)));
 
-                if (record.size() < 8) {
-                    continue;
-                }
+        airport.setName(clean(record.get(1)));
 
-                Airport airport = new Airport();
+        airport.setCity(clean(record.get(2)));
 
-                airport.setId(
-                    Long.parseLong(record.get(0))
-                );
+        airport.setCountry(clean(record.get(3)));
 
-                airport.setName(
-                    clean(record.get(1))
-                );
+        airport.setIata(clean(record.get(4)));
 
-                airport.setCity(
-                    clean(record.get(2))
-                );
+        airport.setIcao(clean(record.get(5)));
 
-                airport.setCountry(
-                    clean(record.get(3))
-                );
+        airport.setLatitude(Double.parseDouble(record.get(6)));
 
-                airport.setIata(
-                    clean(record.get(4))
-                );
+        airport.setLongitude(Double.parseDouble(record.get(7)));
 
-                airport.setIcao(
-                    clean(record.get(5))
-                );
+        repository.save(airport);
+      }
 
-                airport.setLatitude(
-                    Double.parseDouble(record.get(6))
-                );
+      System.out.println("Airport import completed: " + repository.count());
 
-                airport.setLongitude(
-                    Double.parseDouble(record.get(7))
-                );
-
-                repository.save(airport);
-            }
-
-            System.out.println(
-                "Airport import completed: "
-                + repository.count()
-            );
-
-        } catch (Exception e) {
-            throw new RuntimeException(
-                "Failed to import airports",
-                e
-            );
-        }
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to import airports", e);
     }
+  }
 
-
-    private String clean(String value) {
-        return value
-                .replace("\"", "")
-                .trim();
-    }
+  private String clean(String value) {
+    return value.replace("\"", "").trim();
+  }
 }
 
 /**
- * Service responsible for importing airport data from the OpenFlights
- * {@code airports.dat} file into the database when the application starts.
+ * Service responsible for importing airport data from the OpenFlights {@code airports.dat} file
+ * into the database when the application starts.
  *
- * This service is executed automatically after the Spring bean is
- * initialized via the {@link jakarta.annotation.PostConstruct} annotation.
- * Before importing, it checks whether airport records already exist to avoid
- * inserting duplicate data. If the database already contains airport records,
- * the import process is skipped.
+ * <p>This service is executed automatically after the Spring bean is initialized via the {@link
+ * jakarta.annotation.PostConstruct} annotation. Before importing, it checks whether airport records
+ * already exist to avoid inserting duplicate data. If the database already contains airport
+ * records, the import process is skipped.
  *
- * Each record from the data file is parsed, cleaned, mapped to an
- * {@link com.backend.backend.model.Airport} entity, and saved using the
- * {@link com.backend.backend.repository.AirportRepository}. Records that do
- * not contain the required number of fields are ignored.
+ * <p>Each record from the data file is parsed, cleaned, mapped to an {@link
+ * com.backend.backend.model.Airport} entity, and saved using the {@link
+ * com.backend.backend.repository.AirportRepository}. Records that do not contain the required
+ * number of fields are ignored.
  *
- * String values are cleaned by removing surrounding quotation marks and
- * trimming whitespace before being stored. Latitude and longitude values are
- * parsed as {@code double}. If an error occurs during file reading or data
- * processing, a {@link RuntimeException} is thrown.
+ * <p>String values are cleaned by removing surrounding quotation marks and trimming whitespace
+ * before being stored. Latitude and longitude values are parsed as {@code double}. If an error
+ * occurs during file reading or data processing, a {@link RuntimeException} is thrown.
  *
- * Data Source: {@code ../data/raw/airports.dat}
+ * <p>Data Source: {@code ../data/raw/airports.dat}
  *
  * @author Your Name
  * @since 1.0

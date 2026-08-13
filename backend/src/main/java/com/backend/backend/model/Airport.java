@@ -7,20 +7,19 @@ import lombok.Data;
 @Data
 public class Airport {
 
-    @Id
-    private Long id;
+  @Id private Long id;
 
-    private String name;
+  private String name;
 
-    private String city;
+  private String city;
 
-    private String country;
+  private String country;
 
-    private String iata;
+  private String iata;
 
-    private String icao;
+  private String icao;
 
-    private double latitude;
+  private double latitude;
 
-    private double longitude;
+  private double longitude;
 }

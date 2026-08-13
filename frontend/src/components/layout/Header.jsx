@@ -1,65 +1,45 @@
 export default function Header() {
-
-
     return (
-
         <header
-
             style={{
+                position: "absolute",
 
-                position:"absolute",
+                top: 0,
 
-                top:0,
+                left: 0,
 
-                left:0,
+                width: "100%",
 
-                width:"100%",
+                height: "60px",
 
-                height:"60px",
+                zIndex: 3000,
 
-                zIndex:3000,
+                display: "flex",
 
-                display:"flex",
+                alignItems: "center",
 
-                alignItems:"center",
+                padding: "0 25px",
 
-                padding:"0 25px",
+                boxSizing: "border-box",
 
-                boxSizing:"border-box",
+                background: "rgba(0,0,0,0.85)",
 
-                background:
-                    "rgba(0,0,0,0.85)",
+                borderBottom: "1px solid #00ffff",
 
-                borderBottom:
-                    "1px solid #00ffff",
-
-                color:"white"
-
+                color: "white",
             }}
-
         >
-
             <h2
-
                 style={{
+                    margin: 0,
 
-                    margin:0,
+                    color: "#00ffff",
 
-                    color:"#00ffff",
-
-                    letterSpacing:"2px"
-
+                    letterSpacing: "2px",
                 }}
-
             >
-
                 ✈ Flight Network Explorer
-
             </h2>
-
-
         </header>
-
     );
-
 }

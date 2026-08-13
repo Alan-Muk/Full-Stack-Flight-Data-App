@@ -1,37 +1,34 @@
 package com.backend.backend.dto;
 
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class NetworkResponse {
 
-    private String airport;
+  private String airport;
 
-    private List<AirportNode> nodes;
+  private List<AirportNode> nodes;
 
-    private List<RouteEdge> edges;
+  private List<RouteEdge> edges;
 
+  @Data
+  public static class AirportNode {
 
-    @Data
-    public static class AirportNode {
+    private String iata;
 
-        private String iata;
+    private String name;
 
-        private String name;
+    private double latitude;
 
-        private double latitude;
+    private double longitude;
+  }
 
-        private double longitude;
-    }
+  @Data
+  public static class RouteEdge {
 
+    private String from;
 
-    @Data
-    public static class RouteEdge {
-
-        private String from;
-
-        private String to;
-    }
+    private String to;
+  }
 }

@@ -4,54 +4,38 @@ import ConnectionList from "./ConnectionList";
 import NetworkMap from "./NetworkMap";
 
 export default function AirportSearch() {
-
     const [iata, setIata] = useState("");
     const [airport, setAirport] = useState(null);
 
     async function search() {
-
-        const response = await client.get(
-            `/airports/${iata}`
-        );
+        const response = await client.get(`/airports/${iata}`);
 
         setAirport(response.data);
     }
-
 
     return (
         <div>
             <input
                 value={iata}
-                onChange={
-                    e => setIata(e.target.value)
-                }
+                onChange={(e) => setIata(e.target.value)}
                 placeholder="IATA code e.g. FRA"
             />
 
-            <button onClick={search}>
-                Search
-            </button>
+            <button onClick={search}>Search</button>
 
+            {airport && (
+                <div>
+                    <h3>{airport.name}</h3>
 
-        {airport && (
-            <div>
-                <h3>
-                    {airport.name}
-                </h3>
+                    <p>
+                        {airport.city}, {airport.country}
+                    </p>
 
-                <p>
-                    {airport.city}, {airport.country}
-                </p>
+                    <ConnectionList airport={airport.iata} />
 
-                <ConnectionList
-                    airport={airport.iata}
-                />
-
-                <NetworkMap
-                    airport={airport.iata}
-                />
-            </div>
-        )}
+                    <NetworkMap airport={airport.iata} />
+                </div>
+            )}
         </div>
     );
 }

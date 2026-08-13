@@ -1,90 +1,61 @@
 .airport-node {
+    background: transparent;
 
-    background:
-        transparent;
-
-    border:
-        none;
-
+    border: none;
 }
-
 
 .leaflet-popup-content-wrapper {
+    background: #111;
 
-    background:#111;
-
-    color:white;
-
+    color: white;
 }
 
-
 .leaflet-popup-tip {
-
-    background:#111;
-
+    background: #111;
 }
 
 .airport-node .node-pulse.active {
     animation: pulse 2s infinite;
 }
 
-
 @keyframes pulse {
-
     0% {
         opacity: 1;
     }
 
     50% {
-        opacity: .45;
+        opacity: 0.45;
     }
 
     100% {
         opacity: 1;
     }
-
 }
 
-
-
 @keyframes routeFlow {
-
     from {
-
-        stroke-dashoffset:
-            0;
-
+        stroke-dashoffset: 0;
     }
-
 
     to {
-
-        stroke-dashoffset:
-            -40;
-
+        stroke-dashoffset: -40;
     }
-
 }
 
 .flight-route-active {
     animation: routePulse 1.5s infinite;
 }
 
-
 @keyframes routePulse {
-
     0% {
         stroke-opacity: 1;
     }
 
-
     50% {
-        stroke-opacity: .4;
+        stroke-opacity: 0.4;
     }
-
 
     100% {
         stroke-opacity: 1;
     }
-
 }

@@ -33,7 +33,7 @@
     border-radius: 16px;
     color: white;
     padding: 18px;
-    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
     max-height: none;
 }
@@ -68,7 +68,7 @@
     text-align: left;
     padding: 10px;
     cursor: pointer;
-    transition: all .2s ease;
+    transition: all 0.2s ease;
 }
 
 .route-option:hover {
@@ -78,7 +78,7 @@
 .route-option.active {
     border-color: #00ffff;
     background: #222b35;
-    box-shadow: 0 0 10px rgba(0,255,255,.25);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.25);
 }
 
 .route-option small {

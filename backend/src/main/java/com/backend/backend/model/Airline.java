@@ -8,18 +8,17 @@ import lombok.Data;
 @Data
 public class Airline {
 
-    @Id
-    private Long id;
+  @Id private Long id;
 
-    private String name;
+  private String name;
 
-    private String alias;
+  private String alias;
 
-    private String iata;
+  private String iata;
 
-    private String icao;
+  private String icao;
 
-    private String country;
+  private String country;
 
-    private String active;
+  private String active;
 }

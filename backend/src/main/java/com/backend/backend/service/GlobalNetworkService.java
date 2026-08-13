@@ -5,98 +5,74 @@ import com.backend.backend.model.Airport;
 import com.backend.backend.model.Route;
 import com.backend.backend.repository.AirportRepository;
 import com.backend.backend.repository.RouteRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GlobalNetworkService {
 
-    private final AirportRepository airports;
-    private final RouteRepository routes;
+  private final AirportRepository airports;
+  private final RouteRepository routes;
 
+  public GlobalNetworkService(AirportRepository airports, RouteRepository routes) {
+    this.airports = airports;
+    this.routes = routes;
+  }
 
-    public GlobalNetworkService(
-            AirportRepository airports,
-            RouteRepository routes
-    ) {
-        this.airports = airports;
-        this.routes = routes;
-    }
+  public NetworkResponse getAll() {
 
+    NetworkResponse response = new NetworkResponse();
 
-    public NetworkResponse getAll() {
+    List<NetworkResponse.AirportNode> nodes =
+        airports.findAll().stream()
+            .filter(a -> a.getIata() != null)
+            .map(this::node)
+            .collect(Collectors.toList());
 
-        NetworkResponse response =
-                new NetworkResponse();
+    List<NetworkResponse.RouteEdge> edges =
+        routes.findAll().stream().map(this::edge).collect(Collectors.toList());
 
+    response.setNodes(nodes);
+    response.setEdges(edges);
 
-        List<NetworkResponse.AirportNode> nodes =
-                airports.findAll()
-                        .stream()
-                        .filter(a -> a.getIata() != null)
-                        .map(this::node)
-                        .collect(Collectors.toList());
+    return response;
+  }
 
+  private NetworkResponse.AirportNode node(Airport airport) {
 
-        List<NetworkResponse.RouteEdge> edges =
-                routes.findAll()
-                        .stream()
-                        .map(this::edge)
-                        .collect(Collectors.toList());
+    NetworkResponse.AirportNode n = new NetworkResponse.AirportNode();
 
+    n.setIata(airport.getIata());
+    n.setName(airport.getName());
+    n.setLatitude(airport.getLatitude());
+    n.setLongitude(airport.getLongitude());
 
-        response.setNodes(nodes);
-        response.setEdges(edges);
+    return n;
+  }
 
-        return response;
-    }
+  private NetworkResponse.RouteEdge edge(Route route) {
 
+    NetworkResponse.RouteEdge e = new NetworkResponse.RouteEdge();
 
-    private NetworkResponse.AirportNode node(
-            Airport airport
-    ) {
+    e.setFrom(route.getSourceIata());
+    e.setTo(route.getDestinationIata());
 
-        NetworkResponse.AirportNode n =
-                new NetworkResponse.AirportNode();
-
-        n.setIata(airport.getIata());
-        n.setName(airport.getName());
-        n.setLatitude(airport.getLatitude());
-        n.setLongitude(airport.getLongitude());
-
-        return n;
-    }
-
-
-    private NetworkResponse.RouteEdge edge(
-            Route route
-    ) {
-
-        NetworkResponse.RouteEdge e =
-                new NetworkResponse.RouteEdge();
-
-        e.setFrom(route.getSourceIata());
-        e.setTo(route.getDestinationIata());
-
-        return e;
-    }
+    return e;
+  }
 }
 
 /**
- * Service responsible for generating a complete representation of the global
- * airline network from the stored airport and route data.
+ * Service responsible for generating a complete representation of the global airline network from
+ * the stored airport and route data.
  *
- * The service retrieves all airports and routes from the database and
- * transforms them into a {@link com.backend.backend.dto.NetworkResponse}
- * object suitable for network visualization. Airports are represented as
- * nodes containing their identifiers, names, and geographic coordinates,
- * while routes are represented as edges connecting source and destination
- * airports.
+ * <p>The service retrieves all airports and routes from the database and transforms them into a
+ * {@link com.backend.backend.dto.NetworkResponse} object suitable for network visualization.
+ * Airports are represented as nodes containing their identifiers, names, and geographic
+ * coordinates, while routes are represented as edges connecting source and destination airports.
  *
- * Airports without an IATA code are excluded from the generated network to
- * ensure that each node can be uniquely identified.
+ * <p>Airports without an IATA code are excluded from the generated network to ensure that each node
+ * can be uniquely identified.
  *
  * @author Your Name
  * @since 1.0

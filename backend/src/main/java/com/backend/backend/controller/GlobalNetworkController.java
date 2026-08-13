@@ -8,21 +8,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/network")
 public class GlobalNetworkController {
 
+  private final GlobalNetworkService service;
 
-    private final GlobalNetworkService service;
+  public GlobalNetworkController(GlobalNetworkService service) {
+    this.service = service;
+  }
 
+  @GetMapping("/all")
+  public NetworkResponse all() {
 
-    public GlobalNetworkController(
-            GlobalNetworkService service
-    ) {
-        this.service = service;
-    }
-
-
-    @GetMapping("/all")
-    public NetworkResponse all() {
-
-        return service.getAll();
-
-    }
+    return service.getAll();
+  }
 }

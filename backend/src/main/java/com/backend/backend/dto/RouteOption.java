@@ -1,185 +1,136 @@
 package com.backend.backend.dto;
 
-
 import java.util.List;
-
 
 public class RouteOption {
 
+  private String id;
 
-    private String id;
+  private String from;
 
+  private String to;
 
-    private String from;
+  private double distanceKm;
 
+  private String estimatedFlightTime;
 
-    private String to;
+  private boolean fastest;
 
+  private boolean shortest;
 
-    private double distanceKm;
+  private boolean mostConnected;
 
+  private boolean leastConnected;
 
-    private String estimatedFlightTime;
+  private String colour;
 
+  private List<String> airlines;
 
-    private boolean fastest;
+  private List<String> airports;
 
+  private int stops;
 
-    private boolean shortest;
+  public String getId() {
+    return id;
+  }
 
+  public void setId(String id) {
+    this.id = id;
+  }
 
-    private boolean mostConnected;
+  public String getFrom() {
+    return from;
+  }
 
+  public void setFrom(String from) {
+    this.from = from;
+  }
 
-    private boolean leastConnected;
+  public String getTo() {
+    return to;
+  }
 
+  public void setTo(String to) {
+    this.to = to;
+  }
 
-    private String colour;
+  public double getDistanceKm() {
+    return distanceKm;
+  }
 
+  public void setDistanceKm(double distanceKm) {
+    this.distanceKm = distanceKm;
+  }
 
-    private List<String> airlines;
+  public String getEstimatedFlightTime() {
+    return estimatedFlightTime;
+  }
 
-    private List<String> airports;
-    
-    private int stops;
+  public void setEstimatedFlightTime(String estimatedFlightTime) {
+    this.estimatedFlightTime = estimatedFlightTime;
+  }
 
+  public boolean isFastest() {
+    return fastest;
+  }
 
-    public String getId() {
-        return id;
-    }
+  public void setFastest(boolean fastest) {
+    this.fastest = fastest;
+  }
 
+  public boolean isShortest() {
+    return shortest;
+  }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+  public void setShortest(boolean shortest) {
+    this.shortest = shortest;
+  }
 
+  public boolean isMostConnected() {
+    return mostConnected;
+  }
 
+  public void setMostConnected(boolean mostConnected) {
+    this.mostConnected = mostConnected;
+  }
 
-    public String getFrom() {
-        return from;
-    }
+  public boolean isLeastConnected() {
+    return leastConnected;
+  }
 
+  public void setLeastConnected(boolean leastConnected) {
+    this.leastConnected = leastConnected;
+  }
 
-    public void setFrom(String from) {
-        this.from = from;
-    }
+  public String getColour() {
+    return colour;
+  }
 
+  public void setColour(String colour) {
+    this.colour = colour;
+  }
 
+  public List<String> getAirlines() {
+    return airlines;
+  }
 
-    public String getTo() {
-        return to;
-    }
+  public void setAirlines(List<String> airlines) {
+    this.airlines = airlines;
+  }
 
-
-    public void setTo(String to) {
-        this.to = to;
-    }
-
-
-
-    public double getDistanceKm() {
-        return distanceKm;
-    }
-
-
-    public void setDistanceKm(double distanceKm) {
-        this.distanceKm = distanceKm;
-    }
-
-
-
-    public String getEstimatedFlightTime() {
-        return estimatedFlightTime;
-    }
-
-
-    public void setEstimatedFlightTime(String estimatedFlightTime) {
-        this.estimatedFlightTime = estimatedFlightTime;
-    }
-
-
-
-    public boolean isFastest() {
-        return fastest;
-    }
-
-
-    public void setFastest(boolean fastest) {
-        this.fastest = fastest;
-    }
-
-
-
-    public boolean isShortest() {
-        return shortest;
-    }
-
-
-    public void setShortest(boolean shortest) {
-        this.shortest = shortest;
-    }
-
-
-
-    public boolean isMostConnected() {
-        return mostConnected;
-    }
-
-
-    public void setMostConnected(boolean mostConnected) {
-        this.mostConnected = mostConnected;
-    }
-
-
-
-    public boolean isLeastConnected() {
-        return leastConnected;
-    }
-
-
-    public void setLeastConnected(boolean leastConnected) {
-        this.leastConnected = leastConnected;
-    }
-
-
-
-    public String getColour() {
-        return colour;
-    }
-
-
-    public void setColour(String colour) {
-        this.colour = colour;
-    }
-
-
-
-    public List<String> getAirlines() {
-        return airlines;
-    }
-
-
-    public void setAirlines(List<String> airlines) {
-        this.airlines = airlines;
-    }
-
-    public List<String> getAirports() {
+  public List<String> getAirports() {
     return airports;
-    }
+  }
 
+  public void setAirports(List<String> airports) {
+    this.airports = airports;
+  }
 
-    public void setAirports(List<String> airports) {
-        this.airports = airports;
-    }
+  public int getStops() {
+    return stops;
+  }
 
-
-    public int getStops() {
-        return stops;
-    }
-
-
-    public void setStops(int stops) {
-        this.stops = stops;
-    }
-
+  public void setStops(int stops) {
+    this.stops = stops;
+  }
 }

@@ -1,30 +1,22 @@
 package com.backend.backend.dto;
 
-
-import lombok.Data;
-
 import java.util.List;
-
+import lombok.Data;
 
 @Data
 public class AirportStatsResponse {
 
+  private String iata;
 
-    private String iata;
+  private String name;
 
-    private String name;
+  private int connections;
 
+  private int incomingRoutes;
 
-    private int connections;
+  private int outgoingRoutes;
 
-    private int incomingRoutes;
+  private List<String> topDestinations;
 
-    private int outgoingRoutes;
-
-
-    private List<String> topDestinations;
-
-
-    private List<String> airlines;
-
+  private List<String> airlines;
 }

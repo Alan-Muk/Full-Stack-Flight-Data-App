@@ -7,652 +7,282 @@ import com.backend.backend.model.Airport;
 import com.backend.backend.model.Route;
 import com.backend.backend.repository.AirportRepository;
 import com.backend.backend.repository.RouteRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.*;
-
 import java.util.stream.Collectors;
-
+import org.springframework.stereotype.Service;
 
 @Service
 public class RouteService {
 
+  private final AirportRepository airportRepository;
 
-    private final AirportRepository airportRepository;
+  private final RouteRepository routeRepository;
 
-    private final RouteRepository routeRepository;
+  private final GraphServiceClient graphServiceClient;
 
-    private final GraphServiceClient graphServiceClient;
+  public RouteService(
+      AirportRepository airportRepository,
+      RouteRepository routeRepository,
+      GraphServiceClient graphServiceClient) {
 
+    this.airportRepository = airportRepository;
+    this.routeRepository = routeRepository;
+    this.graphServiceClient = graphServiceClient;
+  }
 
+  public RouteDetailsResponse getRoute(String from, String to) {
 
-    public RouteService(
-            AirportRepository airportRepository,
-            RouteRepository routeRepository,
-            GraphServiceClient graphServiceClient
-    ) {
+    Airport origin = airportRepository.findByIata(from).orElseThrow();
 
-        this.airportRepository = airportRepository;
-        this.routeRepository = routeRepository;
-        this.graphServiceClient = graphServiceClient;
+    Airport destination = airportRepository.findByIata(to).orElseThrow();
 
+    List<Route> routes = routeRepository.findBySourceIataAndDestinationIata(from, to);
+
+    double distance =
+        haversine(
+            origin.getLatitude(),
+            origin.getLongitude(),
+            destination.getLatitude(),
+            destination.getLongitude());
+
+    RouteDetailsResponse response = new RouteDetailsResponse();
+
+    response.setFrom(from);
+
+    response.setTo(to);
+
+    response.setDistanceKm(Math.round(distance));
+
+    response.setEstimatedFlightTime(estimateTime(distance));
+
+    response.setDirect(!routes.isEmpty());
+
+    response.setAirlines(
+        routes.stream()
+            .map(Route::getAirline)
+            .filter(Objects::nonNull)
+            .distinct()
+            .sorted()
+            .toList());
+
+    return response;
+  }
+
+  public RouteComparisonResponse compareRoutes(String from, String to) {
+
+    Map pathResponse = graphServiceClient.paths(from, to);
+
+    List<List<String>> paths = (List<List<String>>) pathResponse.get("paths");
+
+    RouteComparisonResponse response = new RouteComparisonResponse();
+
+    if (paths == null || paths.isEmpty()) {
+
+      response.setRoutes(List.of());
+
+      return response;
     }
-
-
-
-    public RouteDetailsResponse getRoute(
-            String from,
-            String to
-    ) {
-
-
-        Airport origin =
-                airportRepository.findByIata(from)
-                        .orElseThrow();
-
-
-        Airport destination =
-                airportRepository.findByIata(to)
-                        .orElseThrow();
-
-
-
-        List<Route> routes =
-                routeRepository
-                        .findBySourceIataAndDestinationIata(
-                                from,
-                                to
-                        );
-
-
-
-        double distance =
-                haversine(
-                        origin.getLatitude(),
-                        origin.getLongitude(),
-                        destination.getLatitude(),
-                        destination.getLongitude()
-                );
-
-
-
-        RouteDetailsResponse response =
-                new RouteDetailsResponse();
-
-
-
-        response.setFrom(from);
-
-        response.setTo(to);
-
-        response.setDistanceKm(
-                Math.round(distance)
-        );
-
-        response.setEstimatedFlightTime(
-                estimateTime(distance)
-        );
-
-
-        response.setDirect(
-                !routes.isEmpty()
-        );
-
-
-
-        response.setAirlines(
-
-                routes.stream()
-
-                        .map(Route::getAirline)
-
-                        .filter(Objects::nonNull)
-
-                        .distinct()
-
-                        .sorted()
-
-                        .toList()
-
-        );
-
-
-        return response;
-
-    }
-
-
-
-
-
-public RouteComparisonResponse compareRoutes(
-        String from,
-        String to
-) {
-
-
-    Map pathResponse =
-            graphServiceClient.paths(
-                    from,
-                    to
-            );
-
-
-    List<List<String>> paths =
-            (List<List<String>>)
-                    pathResponse.get("paths");
-
-
-    RouteComparisonResponse response =
-            new RouteComparisonResponse();
-
-
-
-    if (
-        paths == null ||
-        paths.isEmpty()
-    ) {
-
-        response.setRoutes(
-                List.of()
-        );
-
-        return response;
-
-    }
-
-
 
     List<RouteOption> options =
-            paths.stream()
-
-                    .map(path ->
-                            buildOptionFromAirports(
-                                    from,
-                                    to,
-                                    path
-                            )
-                    )
-
-                    .collect(
-                            Collectors.toList()
-                    );
-
-
+        paths.stream()
+            .map(path -> buildOptionFromAirports(from, to, path))
+            .collect(Collectors.toList());
 
     rankRoutes(options);
 
-
     response.setRoutes(options);
 
-
     return response;
+  }
 
-}
+  private RouteOption buildOptionFromAirports(String from, String to, List<String> airports) {
 
+    RouteOption option = new RouteOption();
 
+    double distance = 0;
 
+    List<String> airlines = new ArrayList<>();
 
-    private RouteOption buildOptionFromAirports(
-            String from,
-            String to,
-            List<String> airports
-    ) {
+    for (int i = 0; i < airports.size() - 1; i++) {
 
-        RouteOption option =
-                new RouteOption();
+      String source = airports.get(i);
 
+      String destination = airports.get(i + 1);
 
-        double distance = 0;
+      List<Route> routes = routeRepository.findBySourceIataAndDestinationIata(source, destination);
 
-        List<String> airlines =
-                new ArrayList<>();
+      for (Route route : routes) {
 
+        if (route.getDistanceKm() != null) {
 
-        for (int i = 0; i < airports.size() - 1; i++) {
-
-
-            String source =
-                    airports.get(i);
-
-            String destination =
-                    airports.get(i + 1);
-
-
-            List<Route> routes =
-                    routeRepository
-                            .findBySourceIataAndDestinationIata(
-                                    source,
-                                    destination
-                            );
-
-
-            for (Route route : routes) {
-
-                if (route.getDistanceKm() != null) {
-
-                    distance += route.getDistanceKm();
-
-                }
-
-
-                airlines.addAll(
-                        route.getAirlines()
-                );
-
-            }
-
+          distance += route.getDistanceKm();
         }
 
-
-        option.setId(
-                String.join(
-                        "-",
-                        airports
-                )
-        );
-
-
-        option.setFrom(from);
-
-        option.setTo(to);
-
-        option.setAirports(
-                airports
-        );
-
-
-        option.setStops(
-                Math.max(
-                        0,
-                        airports.size() - 2
-                )
-        );
-
-
-        option.setDistanceKm(
-                distance
-        );
-
-
-        option.setEstimatedFlightTime(
-                estimateTime(distance)
-        );
-
-
-        option.setAirlines(
-                airlines.stream()
-                        .distinct()
-                        .sorted()
-                        .toList()
-        );
-
-
-        option.setColour(
-                "#ffffff"
-        );
-
-
-        return option;
-
+        airlines.addAll(route.getAirlines());
+      }
     }
 
+    option.setId(String.join("-", airports));
 
+    option.setFrom(from);
 
+    option.setTo(to);
 
+    option.setAirports(airports);
 
-    private RouteOption buildOption(
-            String from,
-            String to,
-            List<Route> path
-    ) {
+    option.setStops(Math.max(0, airports.size() - 2));
 
+    option.setDistanceKm(distance);
 
-        RouteOption option =
-                new RouteOption();
+    option.setEstimatedFlightTime(estimateTime(distance));
 
+    option.setAirlines(airlines.stream().distinct().sorted().toList());
 
+    option.setColour("#ffffff");
 
-        List<String> airports =
-                new ArrayList<>();
+    return option;
+  }
 
+  private RouteOption buildOption(String from, String to, List<Route> path) {
 
-        airports.add(from);
+    RouteOption option = new RouteOption();
 
+    List<String> airports = new ArrayList<>();
 
+    airports.add(from);
 
-        double distance = 0;
+    double distance = 0;
 
+    List<String> airlines = new ArrayList<>();
 
-        List<String> airlines =
-                new ArrayList<>();
+    for (Route route : path) {
 
+      airports.add(route.getDestinationIata());
 
+      if (route.getDistanceKm() != null) {
 
-        for(Route route : path) {
+        distance += route.getDistanceKm();
+      }
 
-
-            airports.add(
-                    route.getDestinationIata()
-            );
-
-
-            if(route.getDistanceKm()!=null) {
-
-                distance +=
-                        route.getDistanceKm();
-
-            }
-
-
-
-            airlines.addAll(
-                    route.getAirlines()
-            );
-
-        }
-
-
-
-
-        option.setId(
-                String.join(
-                        "-",
-                        airports
-                )
-        );
-
-
-        option.setFrom(from);
-
-        option.setTo(to);
-
-
-        option.setAirports(
-                airports
-        );
-
-
-        option.setStops(
-                Math.max(
-                        0,
-                        airports.size()-2
-                )
-        );
-
-
-        option.setDistanceKm(
-                distance
-        );
-
-
-        option.setEstimatedFlightTime(
-                estimateTime(distance)
-        );
-
-
-        option.setAirlines(
-
-                airlines.stream()
-                        .distinct()
-                        .sorted()
-                        .toList()
-
-        );
-
-
-        option.setColour(
-                "#ffffff"
-        );
-
-
-        return option;
-
+      airlines.addAll(route.getAirlines());
     }
 
+    option.setId(String.join("-", airports));
 
+    option.setFrom(from);
 
+    option.setTo(to);
 
+    option.setAirports(airports);
 
+    option.setStops(Math.max(0, airports.size() - 2));
 
+    option.setDistanceKm(distance);
 
-    private void rankRoutes(
-            List<RouteOption> routes
-    ) {
+    option.setEstimatedFlightTime(estimateTime(distance));
 
+    option.setAirlines(airlines.stream().distinct().sorted().toList());
 
-        if(routes.isEmpty())
-            return;
+    option.setColour("#ffffff");
 
+    return option;
+  }
 
+  private void rankRoutes(List<RouteOption> routes) {
 
+    if (routes.isEmpty()) return;
 
-        RouteOption shortest =
-                routes.stream()
-                        .min(
-                                Comparator.comparingDouble(
-                                        RouteOption::getDistanceKm
-                                )
-                        )
-                        .orElse(null);
+    RouteOption shortest =
+        routes.stream().min(Comparator.comparingDouble(RouteOption::getDistanceKm)).orElse(null);
 
+    if (shortest != null) {
 
+      shortest.setShortest(true);
 
-        if(shortest!=null) {
-
-            shortest.setShortest(true);
-
-            shortest.setColour(
-                    "#00ff88"
-            );
-
-        }
-
-
-
-
-
-        RouteOption longest =
-                routes.stream()
-                        .max(
-                                Comparator.comparingDouble(
-                                        RouteOption::getDistanceKm
-                                )
-                        )
-                        .orElse(null);
-
-
-
-        if(longest!=null) {
-
-            longest.setColour(
-                    "#ff4444"
-            );
-
-        }
-
-
-
-
-
-
-        RouteOption fastest =
-                routes.stream()
-                        .min(
-                                Comparator.comparing(
-                                        RouteOption::getEstimatedFlightTime
-                                )
-                        )
-                        .orElse(null);
-
-
-
-        if(fastest!=null) {
-
-            fastest.setFastest(true);
-
-            fastest.setColour(
-                    "#00ffff"
-            );
-
-        }
-
-
-
-
-
-        RouteOption fewestStops =
-                routes.stream()
-
-                        .min(
-                                Comparator.comparingInt(
-                                        RouteOption::getStops
-                                )
-                        )
-
-                        .orElse(null);
-
-
-
-        if(fewestStops!=null) {
-
-            fewestStops.setLeastConnected(true);
-
-        }
-
-
-
-
-
-        RouteOption mostStops =
-                routes.stream()
-
-                        .max(
-                                Comparator.comparingInt(
-                                        RouteOption::getStops
-                                )
-                        )
-
-                        .orElse(null);
-
-
-
-        if(mostStops!=null) {
-
-            mostStops.setMostConnected(true);
-
-        }
-
+      shortest.setColour("#00ff88");
     }
 
+    RouteOption longest =
+        routes.stream().max(Comparator.comparingDouble(RouteOption::getDistanceKm)).orElse(null);
 
+    if (longest != null) {
 
-
-
-
-
-
-    private double haversine(
-            double lat1,
-            double lon1,
-            double lat2,
-            double lon2
-    ) {
-
-
-        double R = 6371;
-
-
-        double dLat =
-                Math.toRadians(
-                        lat2-lat1
-                );
-
-
-        double dLon =
-                Math.toRadians(
-                        lon2-lon1
-                );
-
-
-
-        double a =
-                Math.sin(dLat/2)
-                        *
-                Math.sin(dLat/2)
-
-                +
-
-                Math.cos(
-                        Math.toRadians(lat1)
-                )
-                *
-                Math.cos(
-                        Math.toRadians(lat2)
-                )
-                *
-                Math.sin(dLon/2)
-                *
-                Math.sin(dLon/2);
-
-
-
-        return R *
-                2 *
-                Math.atan2(
-                        Math.sqrt(a),
-                        Math.sqrt(1-a)
-                );
-
+      longest.setColour("#ff4444");
     }
 
+    RouteOption fastest =
+        routes.stream().min(Comparator.comparing(RouteOption::getEstimatedFlightTime)).orElse(null);
 
+    if (fastest != null) {
 
+      fastest.setFastest(true);
 
-
-
-    private String estimateTime(
-            double distance
-    ) {
-
-
-        int hours =
-                (int)Math.ceil(
-                        distance / 800
-                );
-
-
-        return hours + "h";
-
+      fastest.setColour("#00ffff");
     }
 
+    RouteOption fewestStops =
+        routes.stream().min(Comparator.comparingInt(RouteOption::getStops)).orElse(null);
+
+    if (fewestStops != null) {
+
+      fewestStops.setLeastConnected(true);
+    }
+
+    RouteOption mostStops =
+        routes.stream().max(Comparator.comparingInt(RouteOption::getStops)).orElse(null);
+
+    if (mostStops != null) {
+
+      mostStops.setMostConnected(true);
+    }
+  }
+
+  private double haversine(double lat1, double lon1, double lat2, double lon2) {
+
+    double R = 6371;
+
+    double dLat = Math.toRadians(lat2 - lat1);
+
+    double dLon = Math.toRadians(lon2 - lon1);
+
+    double a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(Math.toRadians(lat1))
+                * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2)
+                * Math.sin(dLon / 2);
+
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  private String estimateTime(double distance) {
+
+    int hours = (int) Math.ceil(distance / 800);
+
+    return hours + "h";
+  }
 }
 
 /**
  * Service responsible for retrieving and analysing flight route information.
  *
- * This service provides functionality for obtaining details about direct
- * routes, comparing alternative routes between airports, calculating travel
- * distances, estimating flight times, and ranking route options based on
- * characteristics such as distance and number of stops.
+ * <p>This service provides functionality for obtaining details about direct routes, comparing
+ * alternative routes between airports, calculating travel distances, estimating flight times, and
+ * ranking route options based on characteristics such as distance and number of stops.
  *
- * The service integrates data from the airport and route repositories and
- * communicates with the external graph service to retrieve available paths
- * between airports.
- * 
- * 
+ * <p>The service integrates data from the airport and route repositories and communicates with the
+ * external graph service to retrieve available paths between airports.
  */
 
 /**
  * Retrieves information about a route between two airports.
  *
- * The method determines whether a direct route exists, calculates the
- * geographical distance between the airports using the Haversine formula,
- * estimates the flight time, and returns the airlines operating the route.
+ * <p>The method determines whether a direct route exists, calculates the geographical distance
+ * between the airports using the Haversine formula, estimates the flight time, and returns the
+ * airlines operating the route.
  *
  * @param from the IATA code of the departure airport
  * @param to the IATA code of the destination airport
  * @return a {@link RouteDetailsResponse} containing route information
  * @throws java.util.NoSuchElementException if either airport cannot be found
  */
-
